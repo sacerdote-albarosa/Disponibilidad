@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -84,6 +84,23 @@
         }
 
         input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        select {
+            padding: 10px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+            transition: border-color 0.2s;
+            outline: none;
+            background: white;
+            cursor: pointer;
+        }
+
+        select:focus {
             border-color: var(--primary);
         }
 
@@ -177,7 +194,7 @@
         }
 
         .confirm-area {
-            background: white;
+            background: #E5E7EB;
             padding: 24px;
             border-radius: 12px;
             box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -253,6 +270,28 @@
             justify-content: center;
             font-size: 0.9rem;
         }
+
+        .footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: #4338ca;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -264,15 +303,27 @@
         <div class="setup-section">
             <div class="section-title">
                 <span class="step-number">1</span>
-                <span>Por favor, indicar tu nombre o letra(s) / número(s):</span>
+                <span>Por favor, indicar tu nombre o cualquier letra(s) / número(s):</span>
             </div>
             <div class="input-group">
                 <input type="text" id="userName">
             </div>
 
-            <div style="margin-top: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
                 <div class="section-title">
                     <span class="step-number">2</span>
+                    <span>Selecciona un sacerdote:</span>
+                </div>
+                <div class="input-group">
+                    <select id="personSelect" onchange="onPersonChange()">
+                        <option value="">-- Selecciona --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="step3Section" style="display: none;">
+                <div class="section-title">
+                    <span class="step-number">3</span>
                     <span>Selecciona tu horario abajo</span>
                 </div>
             </div>
@@ -283,34 +334,37 @@
 
         <div class="confirm-area">
             <div class="section-title">
-                <span class="step-number">3</span>
+                <span class="step-number">4</span>
                 <span>Confirmación</span>
             </div>
             <!-- Removed confirm-row -->
             <button id="submitBtn" onclick="submitData()">Enviar Reserva</button>
         </div>
 
-        <!-- Custom Modal Structure -->
-        <div id="customModal"
-            style="display:none; position:fixed; top:0; left:0; width:100%; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:9999; justify-content:center; align-items:center;">
-            <div
-                style="background:white; padding:30px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); text-align:center;">
-                <h3 id="modalTitle" style="margin-top:0; color:var(--primary); margin-bottom:15px;"></h3>
-                <p id="modalMessage" style="color:var(--text-light); margin-bottom:20px; line-height:1.5;"></p>
-                <input type="password" id="modalInput"
-                    style="display:none; width:100%; padding:10px; border:2px solid #E5E7EB; border-radius:8px; margin-bottom:20px; box-sizing:border-box;"
-                    placeholder="Contraseña">
-                <div style="display:flex; justify-content:center; gap:10px;">
-                    <button id="modalCancel"
-                        style="display:none; background:#E5E7EB; color:#374151; padding: 10px 20px; border:none; border-radius:8px; cursor:pointer;">Cancelar</button>
-                    <button id="modalConfirm"
-                        style="background:var(--primary); color:white; padding: 10px 20px; border:none; border-radius:8px; cursor:pointer;">Aceptar</button>
-                </div>
-            </div>
-        </div>
-
         <div class="footer">
+            <a href="#" onclick="cancelReservation(); return false;">Cancelar reserva</a>
             <a href="#" onclick="resetData(); return false;">Admin Reset</a>
+        </div>
+    </div>
+
+    <!-- Custom Modal Structure - Outside wrapper for perfect centering -->
+    <div id="customModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:9999; justify-content:center; align-items:center;">
+        <div
+            style="background:white; padding:30px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); text-align:center;">
+            <h3 id="modalTitle" style="margin-top:0; color:var(--primary); margin-bottom:15px;"></h3>
+            <p id="modalMessage"
+                style="color:var(--text-light); margin-bottom:20px; line-height:1.5; white-space: pre-line; text-align: left;">
+            </p>
+            <input type="password" id="modalInput"
+                style="display:none; width:100%; padding:10px; border:2px solid #E5E7EB; border-radius:8px; margin-bottom:20px; box-sizing:border-box;"
+                placeholder="Contraseña">
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button id="modalCancel"
+                    style="display:none; background:#E5E7EB; color:#374151; padding: 10px 20px; border:none; border-radius:8px; cursor:pointer;">Cancelar</button>
+                <button id="modalConfirm"
+                    style="background:var(--primary); color:white; padding: 10px 20px; border:none; border-radius:8px; cursor:pointer;">Aceptar</button>
+            </div>
         </div>
     </div>
 
@@ -365,8 +419,13 @@
         }
 
         // Defaults - will be overwritten by backend config if available
-        let persons = ["Don Javier", "Fr. Paul"];
-        let days = ["Martes", "Jueves"];
+        // Each person now has their own set of days
+        let personConfigs = [
+            { person: "Don Javier", days: ["Martes", "Jueves"] },
+            { person: "Fr. Paul", days: ["Lunes", "Miércoles"] }
+        ];
+        let selectedPersonConfig = null;
+        let occupiedSlots = [];
         const times = [];
 
         // Generate time slots 4:15 - 7:25 in 5 min intervals
@@ -380,14 +439,15 @@
 
         async function loadData() {
             try {
-                // 1. Fetch Configuration (Persons/Days)
+                // 1. Fetch Configuration (Person-specific days)
                 if (scriptURL !== 'REPLACE_WITH_YOUR_URL') {
                     try {
                         const configRes = await fetch(`${scriptURL}?action=getConfig`);
                         const config = await configRes.json();
 
-                        if (config.persons && config.persons.length > 0) persons = config.persons;
-                        if (config.days && config.days.length > 0) days = config.days;
+                        if (Array.isArray(config) && config.length > 0) {
+                            personConfigs = config;
+                        }
 
                     } catch (err) {
                         console.warn("Could not load config, using defaults.", err);
@@ -395,54 +455,75 @@
                 }
 
                 // 2. Fetch Occupied Slots
-                let taken = [];
-                // If the user hasn't set the URL yet, use mock data for preview
-                if (scriptURL === 'REPLACE_WITH_YOUR_URL') {
-                    console.warn("Using mock data for preview because scriptURL is not set.");
-                    // Mock some occupied slots for demonstration
-                    taken = [
-                        "Don Javier-Martes-4:15",
-                        "Fr. Paul-Jueves-5:00"
-                    ];
-                    // Simulate network delay
-                    await new Promise(r => setTimeout(r, 500));
-                } else {
-                    const res = await fetch(`${scriptURL}?action=getSlots`);
-                    taken = await res.json();
-                }
+                const res = await fetch(`${scriptURL}?action=getSlots`);
+                const taken = await res.json();
 
                 document.getElementById('loader').style.display = 'none';
-                render(taken);
+                occupiedSlots = taken;
+                populatePersonDropdown();
             } catch (e) {
                 console.error(e);
                 document.getElementById('loader').innerText = "Error cargando datos (ver consola).";
             }
         }
 
+        function populatePersonDropdown() {
+            const select = document.getElementById('personSelect');
+            // Clear existing options except the first one
+            select.innerHTML = '<option value="">-- Selecciona --</option>';
+
+            personConfigs.forEach((config, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = config.person;
+                select.appendChild(option);
+            });
+        }
+
+        function onPersonChange() {
+            const select = document.getElementById('personSelect');
+            const selectedIndex = select.value;
+
+            if (selectedIndex === '') {
+                selectedPersonConfig = null;
+                document.getElementById('tablesContainer').innerHTML = '';
+                document.getElementById('step3Section').style.display = 'none';
+            } else {
+                selectedPersonConfig = personConfigs[selectedIndex];
+                document.getElementById('step3Section').style.display = 'block';
+                render(occupiedSlots);
+            }
+        }
+
         function render(taken) {
-            let html = '';
+            if (!selectedPersonConfig) {
+                document.getElementById('tablesContainer').innerHTML = '';
+                return;
+            }
+
+            const person = selectedPersonConfig.person;
+            const days = selectedPersonConfig.days;
             const headerColSpan = days.length + 1;
             const daysHeader = days.map(d => `<td>${d}</td>`).join('');
 
-            persons.forEach(person => {
-                html += `<table>
-                    <tr class="th-blue"><th colspan="${headerColSpan}">${person}</th></tr>
-                    <tr class="th-blue"><td>Hora</td>${daysHeader}</tr>`;
-                times.forEach(t => {
-                    html += `<tr><td>${t}</td>`;
-                    days.forEach(d => {
+            let html = `<table>
+                <tr class="th-blue"><th colspan="${headerColSpan}">${person}</th></tr>
+                <tr class="th-blue"><td>Hora</td>${daysHeader}</tr>`;
 
-                        const id = `${person}-${d}-${t}`;
-                        if (taken.includes(id)) {
-                            html += `<td class="occupied">Ocupado</td>`;
-                        } else {
-                            html += `<td><input type="checkbox" class="slot-check" data-p="${person}" data-d="${d}" data-t="${t}"></td>`;
-                        }
-                    });
-                    html += `</tr>`;
+            times.forEach(t => {
+                html += `<tr><td>${t}</td>`;
+                days.forEach(d => {
+                    const id = `${person}-${d}-${t}`;
+                    if (taken.includes(id)) {
+                        html += `<td class="occupied">Ocupado</td>`;
+                    } else {
+                        html += `<td><input type="checkbox" class="slot-check" data-p="${person}" data-d="${d}" data-t="${t}"></td>`;
+                    }
                 });
-                html += `</table>`;
+                html += `</tr>`;
             });
+            html += `</table>`;
+
             document.getElementById('tablesContainer').innerHTML = html;
         }
 
@@ -467,17 +548,6 @@
 
             try {
                 console.log("Submitting to:", scriptURL);
-
-                // Mock behavior for testing without backend
-                // Check if the URL contains the placeholder text OR if it is empty
-                if (scriptURL === 'REPLACE_WITH_YOUR_URL' || !scriptURL) {
-                    console.warn("Using mock submission because scriptURL is not set.");
-                    await new Promise(r => setTimeout(r, 1000));
-                    await showModal("Simulación", "Reserva exitosa (Conecte el backend para guardar datos reales).");
-                    location.reload();
-                    return;
-                }
-
                 console.log("Sending payload:", JSON.stringify({ name, slots }));
 
                 // Send POST request
@@ -499,9 +569,13 @@
                 console.log("Result:", result);
 
                 if (result.status === 'success') {
+                    // Generate summary
+                    const summary = slots.map(s => `• ${s.person}: ${s.day} ${s.time}`).join('\n');
+                    const message = `Si quieres, antes de aceptar, puedes seleccionar y copiar este resumen de tu reserva para guardarlo.\n\n${summary}`;
+
                     // Clear the input
                     document.getElementById('userName').value = '';
-                    await showModal("¡Éxito!", "¡Reserva confirmada exitosamente!");
+                    await showModal("¡Reserva confirmada!", message);
                     location.reload();
                 } else {
                     // Backend reported a logical error (e.g., slot taken)
@@ -519,6 +593,34 @@
             }
         }
 
+        async function cancelReservation() {
+            document.getElementById('userName').value = '';
+            const name = await showModal("Cancelar reserva", "Ingrese el nombre que usó al hacer la reserva:", "prompt");
+            if (!name || name.trim() === '') return;
+
+            const confirmCancel = await showModal("Confirmar Cancelación", `¿Estás seguro que deseas cancelar todas las reservas bajo el nombre "${name}"?`, "confirm");
+            if (!confirmCancel) return;
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'cancel', name: name.trim() })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    await showModal("Éxito", result.message || "¡Reservas canceladas exitosamente!");
+                    location.reload();
+                } else {
+                    await showModal("Error", result.message || "No se encontraron reservas con ese nombre.");
+                }
+            } catch (error) {
+                console.error("Cancel error:", error);
+                await showModal("Error", "Error de conexión al intentar cancelar.");
+            }
+        }
+
         async function resetData() {
             const password = await showModal("Administrador", "Ingrese contraseña de administrador para reiniciar las reservas:", "prompt");
             if (!password) return;
@@ -527,12 +629,6 @@
             if (!confirmReset) return;
 
             try {
-                if (scriptURL === 'REPLACE_WITH_YOUR_URL' || !scriptURL) {
-                    await showModal("Simulación", "Datos reiniciados.");
-                    location.reload();
-                    return;
-                }
-
                 const response = await fetch(scriptURL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'reset', password: password })
