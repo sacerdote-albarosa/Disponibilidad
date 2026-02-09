@@ -186,6 +186,15 @@
             font-size: 0;
         }
 
+        /* Styling for when names are shown to the person/admin */
+        td.occupied-named {
+            background-color: #EEF2FF;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 8px 4px;
+        }
+
         input[type="checkbox"] {
             width: 20px;
             height: 20px;
@@ -311,7 +320,7 @@
                 <span>Por favor, indicar tu nombre o cualquier letra(s):</span>
             </div>
             <div class="input-group">
-                <input type="text" id="userName">
+                <input type="text" id="userName" oninput="onPersonChange()">
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -433,11 +442,11 @@
         let occupiedSlots = [];
         const times = [];
 
-        // Generate time slots 4:15 - 7:25 in 5 min intervals
+        // Generate time slots 4:10 - 7:20 in 10 min intervals
         for (let h = 4; h <= 7; h++) {
-            for (let m = 0; m < 60; m += 5) {
-                if (h === 4 && m < 15) continue;
-                if (h === 7 && m > 25) break;
+            for (let m = 0; m < 60; m += 10) {
+                if (h === 4 && m < 10) continue;
+                if (h === 7 && m > 20) break;
                 times.push(`${h}:${m < 10 ? '0' + m : m}`);
             }
         }
@@ -519,8 +528,16 @@
                 html += `<tr><td>${t}</td>`;
                 days.forEach(d => {
                     const id = `${person}-${d}-${t}`;
-                    if (taken.includes(id)) {
-                        html += `<td class="occupied">Ocupado</td>`;
+                    const occupantName = taken[id];
+                    const viewerName = document.getElementById('userName').value.trim();
+
+                    if (occupantName) {
+                        // Check if the viewer is the "owner" of this schedule
+                        if (viewerName.toLowerCase() === person.toLowerCase()) {
+                            html += `<td class="occupied-named">${occupantName}</td>`;
+                        } else {
+                            html += `<td class="occupied">Ocupado</td>`;
+                        }
                     } else {
                         html += `<td><input type="checkbox" class="slot-check" data-p="${person}" data-d="${d}" data-t="${t}"></td>`;
                     }
