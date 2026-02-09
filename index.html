@@ -194,18 +194,23 @@
         }
 
         .confirm-area {
-            background: #E5E7EB;
+            background: rgba(75, 85, 99, 0.4);
+            backdrop-filter: blur(10px);
             padding: 24px;
             border-radius: 12px;
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             position: sticky;
             bottom: 20px;
-            border: 1px solid #E5E7EB;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             display: flex;
             flex-direction: column;
             gap: 16px;
             align-items: center;
             z-index: 10;
+        }
+
+        .confirm-area .section-title span:not(.step-number) {
+            color: var(--text-dark);
         }
 
         .confirm-row {
@@ -303,7 +308,7 @@
         <div class="setup-section">
             <div class="section-title">
                 <span class="step-number">1</span>
-                <span>Por favor, indicar tu nombre o cualquier letra(s) / número(s):</span>
+                <span>Por favor, indicar tu nombre o cualquier letra(s):</span>
             </div>
             <div class="input-group">
                 <input type="text" id="userName">
@@ -571,7 +576,7 @@
                 if (result.status === 'success') {
                     // Generate summary
                     const summary = slots.map(s => `• ${s.person}: ${s.day} ${s.time}`).join('\n');
-                    const message = `Si quieres, antes de aceptar, puedes seleccionar y copiar este resumen de tu reserva para guardarlo.\n\n${summary}`;
+                    const message = `${summary}\n\nSi quieres, antes de aceptar, puedes seleccionar y copiar el resumen de tu reserva para guardarlo.`;
 
                     // Clear the input
                     document.getElementById('userName').value = '';
