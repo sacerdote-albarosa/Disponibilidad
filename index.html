@@ -443,9 +443,9 @@
         const times = [];
 
         // Generate time slots 4:10 - 7:20 in 10 min intervals
-        for (let h = 3; h <= 7; h++) {
+        for (let h = 4; h <= 7; h++) {
             for (let m = 0; m < 60; m += 10) {
-                if (h === 3 && m < 30) continue;
+                if (h === 4 && m < 10) continue;
                 if (h === 7 && m > 20) break;
                 times.push(`${h}:${m < 10 ? '0' + m : m}`);
             }
