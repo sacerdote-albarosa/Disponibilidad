@@ -357,7 +357,7 @@
 
         <div class="footer">
             <a href="#" onclick="cancelReservation(); return false;">Cancelar reserva</a>
-            <a href="#" onclick="resetData(); return false;">Reiniciar</a>
+            <a href="#" onclick="openAdminPanel(); return false;">sacd</a>
         </div>
     </div>
 
@@ -382,9 +382,71 @@
         </div>
     </div>
 
+    <!-- Admin Panel Overlay -->
+    <div id="adminOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; overflow-y:auto;">
+        <div
+            style="background:white; margin:40px auto; border-radius:16px; width:90%; max-width:640px; padding:32px; box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+            <h2 style="margin-top:0; color:var(--primary); font-size:1.4rem;">⚙️ Panel de Administrador</h2>
+
+            <!-- Time Settings -->
+            <div style="margin-bottom:24px;">
+                <h3 style="color:var(--text-dark); font-size:1rem; margin-bottom:12px;">⏰ Horario de turnos</h3>
+                <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                    <label
+                        style="display:flex; flex-direction:column; gap:4px; font-size:0.85rem; font-weight:600; color:var(--text-light);">
+                        Inicio
+                        <input type="text" id="adminStartTime" placeholder="03:30"
+                            style="width:90px; padding:8px; border:2px solid #E5E7EB; border-radius:8px; font-size:1rem;">
+                    </label>
+                    <label
+                        style="display:flex; flex-direction:column; gap:4px; font-size:0.85rem; font-weight:600; color:var(--text-light);">
+                        Fin
+                        <input type="text" id="adminEndTime" placeholder="19:20"
+                            style="width:90px; padding:8px; border:2px solid #E5E7EB; border-radius:8px; font-size:1rem;">
+                    </label>
+                    <label
+                        style="display:flex; flex-direction:column; gap:4px; font-size:0.85rem; font-weight:600; color:var(--text-light);">
+                        Intervalo (min)
+                        <input type="number" id="adminInterval" min="1" max="60"
+                            style="width:90px; padding:8px; border:2px solid #E5E7EB; border-radius:8px; font-size:1rem;">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Persons & Days -->
+            <div style="margin-bottom:24px;">
+                <h3 style="color:var(--text-dark); font-size:1rem; margin-bottom:12px;">👥 Personas y días</h3>
+                <div id="adminPersonList" style="display:flex; flex-direction:column; gap:12px;"></div>
+                <button onclick="adminAddPerson()"
+                    style="margin-top:12px; background:var(--primary-light); color:var(--primary); border:2px dashed var(--primary); box-shadow:none; padding:8px 20px; font-size:0.9rem;">+
+                    Añadir persona</button>
+            </div>
+
+            <!-- Reset Reservations Danger Zone -->
+            <div
+                style="border:1px solid #FCA5A5; border-radius:12px; padding:16px; margin-bottom:24px; background:#FEF2F2;">
+                <h3 style="color:#991B1B; font-size:0.95rem; margin:0 0 8px;">⚠️ Zona peligrosa</h3>
+                <p style="color:#7F1D1D; font-size:0.85rem; margin:0 0 12px;">Borra TODAS las reservas actuales. No se
+                    puede deshacer.</p>
+                <button onclick="resetData()"
+                    style="background:#DC2626; color:white; box-shadow:none; padding:8px 20px; font-size:0.9rem;">Reiniciar
+                    reservas</button>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; justify-content:flex-end; gap:12px;">
+                <button onclick="closeAdminPanel()"
+                    style="background:#E5E7EB; color:#374151; box-shadow:none; padding:10px 24px;">Cancelar</button>
+                <button onclick="saveAdminConfig()" id="adminSaveBtn" style="padding:10px 24px;">Guardar
+                    cambios</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // PASTE YOUR GOOGLE WEB APP URL BETWEEN THE QUOTES BELOW
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxlJxzuBW3goZEYi4MLbqrUiW1H5ZjwXYfJJiO7Jjh7Bqn_cbeJI2Q87pkLQIVK-VA7-w/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzmaMFzGQ4BwcWREVbgtTFd5ddea7VjX1nZRcH4ZD6OUn8jNRyWt1y6hNvb0VjBNw4K7g/exec';
 
         // Custom Modal Function
         function showModal(title, message, type = 'alert') {
@@ -445,10 +507,28 @@
 
         function generateTimeSlots(settings) {
             const slots = [];
+            if (!settings || !settings.startTime || !settings.endTime) return slots;
+
+            // Extract HH:mm even if the sheet gives an ISO date string
+            const parseTime = (val) => {
+                if (!val) return null;
+                const timeStr = val.toString();
+                if (timeStr.includes('T')) {
+                    const timePart = timeStr.split('T')[1];
+                    return timePart.split(':').slice(0, 2).map(Number);
+                }
+                return timeStr.split(':').map(Number);
+            };
+
             try {
-                const [startH, startM] = settings.startTime.split(':').map(Number);
-                const [endH, endM] = settings.endTime.split(':').map(Number);
-                const interval = parseInt(settings.interval);
+                const startTimeArr = parseTime(settings.startTime);
+                const endTimeArr = parseTime(settings.endTime);
+
+                if (!startTimeArr || !endTimeArr || startTimeArr.length < 2 || endTimeArr.length < 2) return slots;
+
+                const [startH, startM] = startTimeArr;
+                const [endH, endM] = endTimeArr;
+                const interval = parseInt(settings.interval) || 10;
 
                 let currentH = startH;
                 let currentM = startM;
@@ -480,6 +560,11 @@
                     try {
                         const configRes = await fetch(`${scriptURL}?action=getConfig`);
                         const config = await configRes.json();
+
+                        if (config.status === 'error') {
+                            await showModal("Error de Configuración", config.message);
+                            return;
+                        }
 
                         if (config.personConfigs) {
                             personConfigs = config.personConfigs;
@@ -542,7 +627,7 @@
             }
 
             const person = selectedPersonConfig.person;
-            const days = selectedPersonConfig.days;
+            const days = selectedPersonConfig.days || [];
             const headerColSpan = days.length + 1;
             const daysHeader = days.map(d => `<td>${d}</td>`).join('');
 
@@ -670,7 +755,8 @@
         }
 
         async function resetData() {
-            const password = await showModal("Administrador", "Ingrese contraseña de administrador para reiniciar las reservas:", "prompt");
+            closeAdminPanel();
+            const password = await showModal("Sacerdote Administrador", "Ingrese contraseña de sacerdote administrador para reiniciar las reservas:", "prompt");
             if (!password) return;
 
             const confirmReset = await showModal("Confirmar Reinicio", "¿Está seguro? Esto borrará TODAS las reservas actuales. Esta acción no se puede deshacer.", "confirm");
@@ -693,6 +779,178 @@
             } catch (error) {
                 console.error("Reset error:", error);
                 await showModal("Error", "Error de conexión al intentar reiniciar.");
+            }
+        }
+
+        // ── Admin Panel ───────────────────────────────────────────────
+        let adminPassword = null;
+
+        async function openAdminPanel() {
+            const pwd = await showModal("Sacerdote Administrador", "Ingrese la contraseña de sacerdote administrador:", "prompt");
+            if (!pwd) return;
+            adminPassword = pwd;
+            renderAdminForm();
+            document.getElementById('adminOverlay').style.display = 'block';
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('adminOverlay').style.display = 'none';
+            adminPassword = null;
+        }
+
+        function renderAdminForm() {
+            // Populate time fields
+            document.getElementById('adminStartTime').value = timeSettings.startTime || '';
+            document.getElementById('adminEndTime').value = timeSettings.endTime || '';
+            document.getElementById('adminInterval').value = timeSettings.interval || '';
+
+            // Render person rows
+            const list = document.getElementById('adminPersonList');
+            list.innerHTML = '';
+            personConfigs.forEach((cfg, pi) => {
+                list.appendChild(buildPersonRow(cfg, pi));
+            });
+        }
+
+        function buildPersonRow(cfg, pi) {
+            const row = document.createElement('div');
+            row.className = 'admin-person-row';
+            row.style.cssText = 'background:#F9FAFB; border:1px solid #E5E7EB; border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;';
+
+            // Person name
+            const nameRow = document.createElement('div');
+            nameRow.style.cssText = 'display:flex; align-items:center; gap:8px;';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Nombre del sacerdote';
+            nameInput.value = cfg.person;
+            nameInput.className = 'admin-person-name';
+            nameInput.style.cssText = 'flex:1; padding:8px; border:2px solid #E5E7EB; border-radius:8px; font-size:0.95rem;';
+            const removePersonBtn = document.createElement('button');
+            removePersonBtn.textContent = '✕';
+            removePersonBtn.title = 'Quitar persona';
+            removePersonBtn.onclick = (e) => adminRemovePerson(e.target);
+            removePersonBtn.style.cssText = 'background:#FEE2E2; color:#991B1B; box-shadow:none; padding:6px 10px; font-size:0.9rem; border:none; border-radius:8px; cursor:pointer;';
+            nameRow.appendChild(nameInput);
+            nameRow.appendChild(removePersonBtn);
+            row.appendChild(nameRow);
+
+            // Days
+            const daysContainer = document.createElement('div');
+            daysContainer.className = 'admin-days-container';
+            daysContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; align-items:center;';
+            (cfg.days || []).forEach((day) => {
+                daysContainer.appendChild(buildDayChip(day));
+            });
+            const addDayBtn = document.createElement('button');
+            addDayBtn.textContent = '+ Día';
+            addDayBtn.onclick = (e) => adminAddDay(e.target);
+            addDayBtn.style.cssText = 'background:var(--primary-light); color:var(--primary); box-shadow:none; padding:5px 12px; font-size:0.8rem; border:2px dashed var(--primary); border-radius:8px; cursor:pointer;';
+            daysContainer.appendChild(addDayBtn);
+            row.appendChild(daysContainer);
+
+            return row;
+        }
+
+        function buildDayChip(value) {
+            const wrap = document.createElement('div');
+            wrap.className = 'admin-day-chip';
+            wrap.style.cssText = 'display:flex; align-items:center; gap:4px;';
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.placeholder = 'Día';
+            inp.value = value;
+            inp.className = 'admin-day-input';
+            inp.style.cssText = 'width:100px; padding:6px 8px; border:2px solid #E5E7EB; border-radius:8px; font-size:0.85rem;';
+            const del = document.createElement('button');
+            del.textContent = '×';
+            del.title = 'Quitar día';
+            del.onclick = (e) => adminRemoveDay(e.target);
+            del.style.cssText = 'background:#FEE2E2; color:#991B1B; box-shadow:none; padding:4px 8px; font-size:0.85rem; border:none; border-radius:6px; cursor:pointer;';
+            wrap.appendChild(inp);
+            wrap.appendChild(del);
+            return wrap;
+        }
+
+        function collectAdminForm() {
+            // Collect persons & days
+            const persons = [];
+            document.querySelectorAll('.admin-person-row').forEach(row => {
+                const name = row.querySelector('.admin-person-name').value.trim();
+                if (!name) return;
+                const days = [];
+                row.querySelectorAll('.admin-day-input').forEach(di => {
+                    if (di.value.trim()) days.push(di.value.trim());
+                });
+                if (days.length > 0) persons.push({ person: name, days });
+            });
+            const settings = {
+                startTime: document.getElementById('adminStartTime').value.trim(),
+                endTime: document.getElementById('adminEndTime').value.trim(),
+                interval: parseInt(document.getElementById('adminInterval').value)
+            };
+            return { persons, settings };
+        }
+
+        function adminAddPerson() {
+            const newCfg = { person: '', days: [''] };
+            document.getElementById('adminPersonList').appendChild(buildPersonRow(newCfg));
+        }
+
+        function adminRemovePerson(target) {
+            const row = target.closest('.admin-person-row');
+            if (row) row.remove();
+        }
+
+        function adminAddDay(target) {
+            const container = target.closest('.admin-days-container');
+            if (container) {
+                container.insertBefore(buildDayChip(''), target);
+            }
+        }
+
+        function adminRemoveDay(target) {
+            const chip = target.closest('.admin-day-chip');
+            if (chip) chip.remove();
+        }
+
+        async function saveAdminConfig() {
+            const btn = document.getElementById('adminSaveBtn');
+            const { persons, settings } = collectAdminForm();
+
+            if (persons.length === 0) {
+                await showModal("Error", "Debe haber al menos una persona con un día asignado.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateConfig',
+                        password: adminPassword,
+                        personConfigs: persons,
+                        settings: settings
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    closeAdminPanel();
+                    await showModal("Éxito", "¡Configuración guardada! La página se recargará.");
+                    location.reload();
+                } else {
+                    await showModal("Error", result.message || "No se pudo guardar.");
+                    btn.disabled = false;
+                    btn.textContent = 'Guardar cambios';
+                }
+            } catch (err) {
+                console.error(err);
+                await showModal("Error de conexión", err.message);
+                btn.disabled = false;
+                btn.textContent = 'Guardar cambios';
             }
         }
 
