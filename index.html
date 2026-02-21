@@ -438,18 +438,40 @@
             { person: "Don Javier", days: ["Martes", "Jueves"] },
             { person: "Fr. Paul", days: ["Lunes", "Miércoles"] }
         ];
+        let timeSettings = { startTime: "03:30", endTime: "19:20", interval: 10 };
         let selectedPersonConfig = null;
         let occupiedSlots = [];
-        const times = [];
+        let times = [];
 
-        // Generate time slots 4:10 - 7:20 in 10 min intervals
-        for (let h = 4; h <= 7; h++) {
-            for (let m = 0; m < 60; m += 10) {
-                if (h === 4 && m < 10) continue;
-                if (h === 7 && m > 20) break;
-                times.push(`${h}:${m < 10 ? '0' + m : m}`);
+        function generateTimeSlots(settings) {
+            const slots = [];
+            try {
+                const [startH, startM] = settings.startTime.split(':').map(Number);
+                const [endH, endM] = settings.endTime.split(':').map(Number);
+                const interval = parseInt(settings.interval);
+
+                let currentH = startH;
+                let currentM = startM;
+
+                // Simple safety break to prevent infinite loops if interval is 0 or negative
+                let safety = 0;
+                while ((currentH < endH || (currentH === endH && currentM <= endM)) && safety < 500) {
+                    slots.push(`${currentH}:${currentM < 10 ? '0' + currentM : currentM}`);
+                    currentM += interval;
+                    if (currentM >= 60) {
+                        currentH += Math.floor(currentM / 60);
+                        currentM = currentM % 60;
+                    }
+                    safety++;
+                }
+            } catch (e) {
+                console.error("Error generating time slots:", e);
             }
+            return slots;
         }
+
+        // Initial generation with defaults
+        times = generateTimeSlots(timeSettings);
 
         async function loadData() {
             try {
@@ -459,8 +481,12 @@
                         const configRes = await fetch(`${scriptURL}?action=getConfig`);
                         const config = await configRes.json();
 
-                        if (Array.isArray(config) && config.length > 0) {
-                            personConfigs = config;
+                        if (config.personConfigs) {
+                            personConfigs = config.personConfigs;
+                        }
+                        if (config.settings) {
+                            timeSettings = config.settings;
+                            times = generateTimeSlots(timeSettings);
                         }
 
                     } catch (err) {
